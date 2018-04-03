@@ -3,18 +3,34 @@ from sanic.views import HTTPMethodView
 from marshmallow import Schema, fields
 
 from helpers.request import validate
+from oad import openapi
 
 
+@openapi.doc({
+    'description': 'Welcome view methods set example',
+})
 class WelcomeView(HTTPMethodView):
 
-    class PostSchema(Schema):
+    class WelcomePostSchema(Schema):
         message = fields.String(required=True)
 
-    @staticmethod
-    async def get(request):
+    @openapi.doc({
+        'summary': 'Welcome get method example',
+    })
+    @openapi.response()
+    async def get(self, request):
         return response.json('Welcome!')
 
-    @validate.body(PostSchema())
+    @openapi.doc({
+        'summary': 'Welcome post method example',
+        'responses': {
+            '200': {
+                'description': 'Welcome result response',
+            },
+        },
+    })
+    @openapi.response(schema=WelcomePostSchema())
+    @validate.body(WelcomePostSchema())
     async def post(self, request):
         return response.json(
-            'Done! With message %s' % request['data']['message'])
+            ['Done! Your message is `%s`' % request['data']['message']])

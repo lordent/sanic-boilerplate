@@ -45,27 +45,21 @@ class OpenAPIDoc:
         self.doc = dict_merge(self.doc, documentation)
         return self
 
-    def add_method_handler(self, uri, path_parameters, method_name, handler):
+    def add_method_handler(self, uri, tags, method_name, handler):
         if hasattr(handler, '__openapi__'):
-            api_doc = handler.__openapi__
-            api_doc.parameters_path = {
-                **path_parameters,
-                **api_doc.parameters_path
-            }
+            self.paths[uri][method_name] = dict_merge(
+                handler.__openapi__.documentation, {'tags': tags})
+            self.schemas.update(handler.__openapi__.schemas)
 
-            self.paths[uri][method_name] = api_doc.to_dict()
-
-    def to_dict(self, app, url_prefix='/'):
+    def to_dict(self, app, url_prefix='/', tag_blueprints=True):
         methods = ('get', 'post', 'put', 'patch', 'delete')
         for uri, route in app.router.routes_all.items():
             if not uri.startswith(url_prefix):
                 continue
 
             uri_parsed = uri[len(url_prefix):]
-            if uri_parsed[0] != '/':
+            if not uri_parsed or uri_parsed[0] != '/':
                 uri_parsed = '/' + uri_parsed
-
-            path_parameters = dict()
 
             for parameter in route.parameters:
                 uri_parsed = re.sub(
@@ -76,19 +70,33 @@ class OpenAPIDoc:
 
             self.paths[uri_parsed] = dict()
 
+            tags = list()
+            if tag_blueprints:
+                for blueprint in app.blueprints.values():
+                    if hasattr(blueprint, 'routes'):
+                        for blueprint_route in blueprint.routes:
+                            if blueprint_route.handler == route.handler:
+                                tags.append(blueprint.name)
+
             if hasattr(route.handler, 'view_class'):
                 view = route.handler.view_class
+
+                if hasattr(view, '__openapi__'):
+                    self.paths[uri_parsed] = dict_merge(
+                        self.paths[uri_parsed], view.__openapi__.documentation)
+                    self.schemas.update(view.__openapi__.schemas)
+
                 for method_name in methods:
                     if hasattr(view, method_name):
                         self.add_method_handler(
-                            uri_parsed, path_parameters,
+                            uri_parsed, tags,
                             method_name, getattr(view, method_name)
                         )
             else:
                 for method_name in methods:
                     if method_name.upper() in route.methods:
                         self.add_method_handler(
-                            uri_parsed, path_parameters,
+                            uri_parsed, tags,
                             method_name, route.handler
                         )
 

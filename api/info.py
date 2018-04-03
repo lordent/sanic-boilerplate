@@ -1,5 +1,5 @@
 from sanic import response
-from oad.doc import OpenAPIDoc
+from oad.api import OpenAPIDoc
 
 from app import app
 
