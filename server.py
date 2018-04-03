@@ -11,7 +11,6 @@ import middlewares  # noqa
 host = os.environ.get('HOST', '0.0.0.0')
 port = int(os.environ.get('PORT', '8080'))
 
-
 asyncio.set_event_loop(uvloop.new_event_loop())
 if hasattr(app.config, 'DEBUG'):
     app.run(
