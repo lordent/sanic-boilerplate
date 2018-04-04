@@ -11,7 +11,7 @@ from oad import openapi
 })
 class WelcomeView(HTTPMethodView):
 
-    class WelcomePostSchema(Schema):
+    class WelcomePost(Schema):
         message = fields.String(required=True)
 
     @openapi.doc({
@@ -29,8 +29,8 @@ class WelcomeView(HTTPMethodView):
             },
         },
     })
-    @openapi.response(schema=WelcomePostSchema())
-    @validate.body(WelcomePostSchema())
+    @openapi.response(schema=WelcomePost(many=True))
+    @validate.body(WelcomePost())
     async def post(self, request):
         return response.json(
             ['Done! Your message is `%s`' % request['data']['message']])

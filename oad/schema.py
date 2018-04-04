@@ -64,10 +64,13 @@ def schema_to_dict(schema: marshmallow.Schema):
 
         meta = field_obj.metadata.get('openapi', dict())
 
-        properties[field_name] = {
-            'description': meta.get('description', ''),
-            'deprecated': meta.get('deprecated', False),
-        }
+        properties[field_name] = {}
+
+        if 'description' in meta:
+            properties[field_name]['description'] = meta['description']
+
+        if 'deprecated' in meta:
+            properties[field_name]['deprecated'] = meta['deprecated']
 
         if field_obj.required:
             required.append(field_name)
@@ -86,7 +89,8 @@ def schema_to_dict(schema: marshmallow.Schema):
             continue
 
         if isinstance(field_obj, marshmallow.fields.List):
-            type_, format_ = FIELD_MAPPING.get(type(field_obj.container), ('string', None))
+            type_, format_ = FIELD_MAPPING.get(
+                type(field_obj.container), ('string', None))
 
             properties[field_name].update(**{
                 'type': 'array',
@@ -110,7 +114,8 @@ def schema_to_dict(schema: marshmallow.Schema):
 
 def schema_to_ref(schema: marshmallow.Schema):
     ref = {
-        '$ref': '#/components/schemas/%s' % schema.__class__.__name__,
+        '$ref': '#/components/schemas/%s' %
+                schema.__class__.__name__,
     }
     if schema.many:
         return {'type': 'array', 'items': ref}

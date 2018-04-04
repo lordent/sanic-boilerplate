@@ -7,6 +7,7 @@ from oad import openapi
 from errors.request import (
     BadRequestQueryData,
     BadRequestBodyData,
+    BaseErrorResponse,
 )
 
 
@@ -18,6 +19,7 @@ def query(schema: Schema):
         else:
             raise Exception("Missing required argument: 'request'")
 
+        @openapi.response(status=400, schema=BaseErrorResponse.schema)
         @wraps(func)
         async def wrapper(*args, **kwargs):
             request = args[request_pos]
@@ -38,18 +40,7 @@ def body(schema: Schema):
             raise Exception("Missing required argument: 'request'")
 
         @openapi.request(schema=schema)
-        @openapi.response({
-            'examples': {
-                'Body': {
-                    'summary': 'Bad body data',
-                    'value': {
-                        'type': BadRequestBodyData.type,
-                        'message': '',
-                        'errors': schema.load({}).errors,
-                    }
-                },
-            }
-        }, status=400, schema={'type': 'object'})
+        @openapi.response(status=400, schema=BaseErrorResponse.schema)
         @wraps(func)
         async def wrapper(*args, **kwargs):
             request = args[request_pos]
