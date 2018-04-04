@@ -18,7 +18,7 @@ class WelcomeView(HTTPMethodView):
         'summary': 'Welcome get method example',
     })
     @openapi.response()
-    async def get(self, request):
+    async def get(self, request, parameter_id):
         return response.json('Welcome!')
 
     @openapi.doc({
@@ -31,6 +31,6 @@ class WelcomeView(HTTPMethodView):
     })
     @openapi.response(schema=WelcomePost(many=True))
     @validate.body(WelcomePost())
-    async def post(self, request):
+    async def post(self, request, parameter_id):
         return response.json(
             ['Done! Your message is `%s`' % request['data']['message']])

@@ -41,15 +41,20 @@ class OpenAPIDoc:
             'components': self.components,
         }, kwargs)
 
-    def doc(self, documentation: dict):
-        self.doc = dict_merge(self.doc, documentation)
-        return self
-
     def add_method_handler(self, uri, tags, method_name, handler):
         if hasattr(handler, '__openapi__'):
             self.paths[uri][method_name] = dict_merge(
                 handler.__openapi__.documentation, {'tags': tags})
             self.schemas.update(handler.__openapi__.schemas)
+
+    def add_parameter(self, name, documentary: dict = None):
+        self.parameters[name] = dict_merge({
+            'name': name,
+            'in': 'path',
+            'required': True,
+            'schema': {'type': 'string'},
+        }, documentary or {})
+        return self
 
     def to_dict(self, app, url_prefix='/', tag_blueprints=True):
         methods = ('get', 'post', 'put', 'patch', 'delete')
@@ -61,12 +66,21 @@ class OpenAPIDoc:
             if not uri_parsed or uri_parsed[0] != '/':
                 uri_parsed = '/' + uri_parsed
 
+            parameters = []
+
             for parameter in route.parameters:
                 uri_parsed = re.sub(
                     '<%s.*?>' % parameter.name,
                     '{%s}' % parameter.name,
                     uri_parsed
                 )
+
+                parameters.append({
+                    '$ref': '#/components/parameters/%s' % parameter.name,
+                })
+
+                if parameter.name not in self.parameters:
+                    self.add_parameter(parameter.name)
 
             self.paths[uri_parsed] = dict()
 
@@ -92,6 +106,12 @@ class OpenAPIDoc:
                             uri_parsed, tags,
                             method_name, getattr(view, method_name)
                         )
+
+                if self.paths[uri_parsed]:
+                    self.paths[uri_parsed] = dict_merge(
+                        self.paths[uri_parsed],
+                        {'parameters': parameters},
+                    )
             else:
                 for method_name in methods:
                     if method_name.upper() in route.methods:
