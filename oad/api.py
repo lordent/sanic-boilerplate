@@ -47,13 +47,37 @@ class OpenAPIDoc:
                 handler.__openapi__.documentation, {'tags': tags})
             self.schemas.update(handler.__openapi__.schemas)
 
-    def add_parameter(self, name, documentary: dict = None):
+    def add_server(self, url, documentation: dict = None):
+        """Add server info
+        https://swagger.io/docs/specification/api-host-and-base-path/
+
+        servers:
+          - url: https://{customerId}.saas-app.com:{port}/v2
+            variables:
+              customerId:
+                default: demo
+                description: Customer ID assigned by the service provider
+              port:
+                enum:
+                  - '443'
+                  - '8443'
+                default: '443'
+        """
+
+        self.doc = dict_merge(self.doc, {
+            'servers': [dict_merge({
+                'url': url,
+            }, documentation or {})],
+        })
+        return self
+
+    def add_parameter(self, name, documentation: dict = None):
         self.parameters[name] = dict_merge({
             'name': name,
             'in': 'path',
             'required': True,
             'schema': {'type': 'string'},
-        }, documentary or {})
+        }, documentation or {})
         return self
 
     def to_dict(self, app, url_prefix='/', tag_blueprints=True):
