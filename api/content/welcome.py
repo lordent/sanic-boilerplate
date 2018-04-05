@@ -31,4 +31,9 @@ class WelcomeView(HTTPMethodView):
     @validate.body(WelcomePost())
     async def post(self, request, parameter_id):
         return response.json(
-            ['Done! Your message is `%s`' % request['data']['message']])
+            [
+                'Done! Your message is `%s`, parameter: `%s`' % (
+                    request['data']['message'], parameter_id
+                )
+            ]
+        )
