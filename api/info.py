@@ -15,7 +15,11 @@ async def handler_openapi(request):
     return response.json(
         api.OpenAPIDoc()
         .add_server(
-            'https://%s%s' % (request.headers['host'], url_prefix),
+            '%s://%s%s' % (
+                ('http', 'https')[hasattr(app.config, 'ssl')],
+                request.headers['host'],
+                url_prefix
+            ),
         )
         .add_parameter('parameter_id', {
             'description': 'Welcome parameter',

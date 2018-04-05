@@ -6,11 +6,16 @@ from oad.merge import dict_merge
 class OpenAPIDoc:
 
     def __init__(self, *args, **kwargs):
+        """ OpenAPI documentation
+        https://swagger.io/docs/specification/about/
+        """
+
         self.paths = dict()
         self.schemas = dict()
         self.parameters = dict()
         self.responses = dict()
         self.security_schemes = dict()
+        self.tags = list()
 
         self.components = dict(
             schemas=self.schemas,
@@ -36,7 +41,7 @@ class OpenAPIDoc:
                 },
                 'version': '',
             },
-            'tags': [],
+            'tags': self.tags,
             'paths': self.paths,
             'components': self.components,
         }, kwargs)
@@ -47,21 +52,29 @@ class OpenAPIDoc:
                 handler.__openapi__.documentation, {'tags': tags})
             self.schemas.update(handler.__openapi__.schemas)
 
-    def add_server(self, url, documentation: dict = None):
-        """Add server info
-        https://swagger.io/docs/specification/api-host-and-base-path/
+    def add_tag(self, name: str, documentation: dict = None):
+        """ Add tag info
+        https://swagger.io/docs/specification/grouping-operations-with-tags/
+        """
 
-        servers:
-          - url: https://{customerId}.saas-app.com:{port}/v2
-            variables:
-              customerId:
-                default: demo
-                description: Customer ID assigned by the service provider
-              port:
-                enum:
-                  - '443'
-                  - '8443'
-                default: '443'
+        self.tags.append(dict_merge({
+            'name': name,
+        }, documentation or {}))
+        return self
+
+    def add_security(self, name: str, type: str, documentation: dict = None):
+        """ Add security
+        https://swagger.io/docs/specification/authentication/
+        """
+
+        self.security_schemes[name] = dict_merge({
+            'type': type,
+        }, documentation or {})
+        return self
+
+    def add_server(self, url, documentation: dict = None):
+        """ Add server info
+        https://swagger.io/docs/specification/api-host-and-base-path/
         """
 
         self.doc = dict_merge(self.doc, {
@@ -72,6 +85,10 @@ class OpenAPIDoc:
         return self
 
     def add_parameter(self, name, documentation: dict = None):
+        """ Add path parameters
+        https://swagger.io/docs/specification/serialization/
+        """
+
         self.parameters[name] = dict_merge({
             'name': name,
             'in': 'path',
