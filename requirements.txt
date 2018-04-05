@@ -4,3 +4,4 @@ raven
 raven_aiohttp
 pytest
 pytest-sanic
+openapi-spec-validator
