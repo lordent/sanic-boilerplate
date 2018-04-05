@@ -16,7 +16,7 @@ async def handler_openapi(request):
         api.OpenAPIDoc()
         .add_server(
             '%s://%s%s' % (
-                ('http', 'https')[hasattr(app.config, 'ssl')],
+                request.scheme,
                 request.headers['host'],
                 url_prefix
             ),
