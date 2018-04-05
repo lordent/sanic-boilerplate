@@ -2,15 +2,16 @@ from marshmallow import Schema, fields
 from sanic.response import HTTPResponse, json_dumps
 
 
-class BaseErrorResponse(HTTPResponse):
+class BaseError(Schema):
+    type = fields.String(required=True)
+    message = fields.String()
+    errors = fields.Dict(
+        values=fields.String(),
+        keys=fields.String()
+    )
 
-    class BaseError(Schema):
-        type = fields.String(required=True)
-        message = fields.String()
-        errors = fields.Dict(
-            values=fields.String(),
-            keys=fields.String()
-        )
+
+class BaseErrorResponse(HTTPResponse):
 
     schema = BaseError()
 
