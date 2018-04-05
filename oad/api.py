@@ -57,7 +57,8 @@ class OpenAPIDoc:
         return self
 
     def to_dict(self, app, url_prefix='/', tag_blueprints=True):
-        methods = ('get', 'post', 'put', 'patch', 'delete')
+        methods = {'get', 'post', 'put', 'patch', 'delete'}
+
         for uri, route in app.router.routes_all.items():
             if not uri.startswith(url_prefix):
                 continue
@@ -97,27 +98,33 @@ class OpenAPIDoc:
 
                 if hasattr(view, '__openapi__'):
                     self.paths[uri_parsed] = dict_merge(
-                        self.paths[uri_parsed], view.__openapi__.documentation)
+                        self.paths[uri_parsed],
+                        view.__openapi__.documentation
+                    )
                     self.schemas.update(view.__openapi__.schemas)
 
-                for method_name in methods:
-                    if hasattr(view, method_name):
-                        self.add_method_handler(
-                            uri_parsed, tags,
-                            method_name, getattr(view, method_name)
-                        )
+                for method_name in methods & set(dir(view)):
+                    self.add_method_handler(
+                        uri_parsed, tags,
+                        method_name, getattr(view, method_name)
+                    )
 
-                if self.paths[uri_parsed]:
+                if parameters and self.paths[uri_parsed]:
                     self.paths[uri_parsed] = dict_merge(
                         self.paths[uri_parsed],
                         {'parameters': parameters},
                     )
             else:
-                for method_name in methods:
-                    if method_name.upper() in route.methods:
-                        self.add_method_handler(
-                            uri_parsed, tags,
-                            method_name, route.handler
+                for method_name in methods & set(map(str.lower, route.methods)):
+                    self.add_method_handler(
+                        uri_parsed, tags,
+                        method_name, route.handler
+                    )
+
+                    if parameters and method_name in self.paths[uri_parsed]:
+                        self.paths[uri_parsed][method_name] = dict_merge(
+                            self.paths[uri_parsed][method_name],
+                            {'parameters': parameters},
                         )
 
             if not self.paths[uri_parsed]:

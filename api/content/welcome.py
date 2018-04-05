@@ -6,13 +6,14 @@ from helpers.request import validate
 from oad import openapi
 
 
+class WelcomePost(Schema):
+    message = fields.String(required=True)
+
+
 @openapi.doc({
     'description': 'Welcome view methods set example',
 })
 class WelcomeView(HTTPMethodView):
-
-    class WelcomePost(Schema):
-        message = fields.String(required=True)
 
     @openapi.doc({
         'summary': 'Welcome get method example',
@@ -23,13 +24,10 @@ class WelcomeView(HTTPMethodView):
 
     @openapi.doc({
         'summary': 'Welcome post method example',
-        'responses': {
-            '200': {
-                'description': 'Welcome result response',
-            },
-        },
     })
-    @openapi.response(schema=WelcomePost(many=True))
+    @openapi.response({
+        'description': 'Welcome result response',
+    }, schema=WelcomePost(many=True))
     @validate.body(WelcomePost())
     async def post(self, request, parameter_id):
         return response.json(

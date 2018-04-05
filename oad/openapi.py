@@ -32,8 +32,12 @@ def doc(documentation: dict, schemas: List[Schema] = None):
     return inner
 
 
-def request(documentation: dict = None,
-            content_type='application/json', schema=None):
+def request(
+    documentation: dict = None,
+    content_documentation: dict = None,
+    content_type='application/json',
+    schema=None
+):
     def inner(func):
         schemas = []
         if isinstance(schema, Schema):
@@ -43,19 +47,24 @@ def request(documentation: dict = None,
             schema_ = schema or {'type': 'string'}
 
         return doc({
-            'requestBody': {
+            'requestBody': dict_merge({
                 'content': {
                     content_type: dict_merge({
                         'schema': schema_,
-                    }, documentation or dict()),
+                    }, content_documentation or dict()),
                 },
-            },
+            }, documentation or dict()),
         }, schemas=schemas)(func)
     return inner
 
 
-def response(documentation: dict = None, status=200,
-             content_type='application/json', schema=None):
+def response(
+    documentation: dict = None,
+    content_documentation: dict = None,
+    status=200,
+    content_type='application/json',
+    schema=None
+):
     def inner(func):
         schemas = []
         if isinstance(schema, Schema):
@@ -66,13 +75,13 @@ def response(documentation: dict = None, status=200,
 
         return doc({
             'responses': {
-                str(status): {
+                str(status): dict_merge({
                     'content': {
                         content_type: dict_merge({
                             'schema': schema_
-                        }, documentation or dict()),
+                        }, content_documentation or dict()),
                     },
-                },
+                }, documentation or dict()),
             },
         }, schemas=schemas)(func)
     return inner
