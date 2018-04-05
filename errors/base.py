@@ -23,7 +23,7 @@ class BaseErrorResponse(HTTPResponse):
             type=self.type,
             message=message,
             errors=errors,
-        ))
+        )).data
 
         kwargs.setdefault('content_type', 'application/json')
         kwargs.setdefault('status', 400)
