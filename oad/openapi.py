@@ -62,7 +62,7 @@ def response(
     documentation: dict = None,
     content_documentation: dict = None,
     status=200,
-    content_type='text/plain',
+    content_type='application/json',
     schema=None
 ):
     def inner(func):

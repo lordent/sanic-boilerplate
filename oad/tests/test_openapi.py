@@ -1,4 +1,3 @@
-import pytest
 from openapi_spec_validator import validate_spec
 
 from oad import openapi
@@ -23,9 +22,33 @@ async def test_doc():
         'version': '1.0'
     }
 
+    error_schema = {
+        'type': 'object',
+        'properties': {
+            'type': {'type': 'string'},
+            'message': {'type': 'string'},
+            'errors': {'type': 'object'}
+        },
+    }
+
+    error_response = {
+        'description': 'Error response',
+        'content': {
+            'application/json': {
+                'schema': {
+                    '$ref': '#/components/schemas/Error'
+                }
+            }
+        }
+    }
+
     @openapi.doc({
         'summary': 'Test summary text',
         'description': 'Test description',
+        'tags': ['test'],
+        'parameters': [{
+            '$ref': '#/components/parameters/TestParameter'
+        }],
     })
     @openapi.request({
         'description': 'Test description',
@@ -44,32 +67,56 @@ async def test_doc():
         },
     })
     @openapi.response()
+    @openapi.response(
+        status=400, schema={'$ref': '#/components/schemas/Error'})
     async def test_handler():
         return 'Ok!'
 
-    assert hasattr(test_handler, '__openapi__')
     assert await test_handler() == 'Ok!'
 
     doc = (
         OpenAPIDoc({
             'info': info,
         })
-        .add_path('/test', 'post', test_handler.__openapi__.documentation)
+        .add_parameter('TestParameter')
+        .add_tag('test', {'description': 'Test tag description'})
+        .add_path(
+            '/test/{TestParameter}', 'post',
+            test_handler.__openapi__.documentation)
+        .add_schema('Error', error_schema)
+        .add_response('Error', error_response)
         .to_dict()
     )
 
     assert doc == {
         'openapi': '3.0.0',
         'info': info,
-        'tags': [],
+        'tags': [{
+            'name': 'test',
+            'description': 'Test tag description'
+        }],
         'paths': {
-            '/test': {
+            '/test/{TestParameter}': {
                 'post': {
+                    'tags': ['test'],
+                    'parameters': [{
+                        '$ref': '#/components/parameters/TestParameter'
+                    }],
                     'responses': {
+                        '400': {
+                            'description': '',
+                            'content': {
+                                'application/json': {
+                                    'schema': {
+                                        '$ref': '#/components/schemas/Error'
+                                    }
+                                }
+                            }
+                        },
                         '200': {
                             'description': '',
                             'content': {
-                                'text/plain': {
+                                'application/json': {
                                     'schema': {
                                         'type': 'string'
                                     }
@@ -103,9 +150,33 @@ async def test_doc():
             }
         },
         'components': {
-            'schemas': {},
-            'parameters': {},
-            'responses': {},
+            'schemas': {
+                'Error': {
+                    'type': 'object',
+                    'properties': {
+                        'type': {
+                            'type': 'string'
+                        },
+                        'message': {
+                            'type': 'string'
+                        },
+                        'errors': {
+                            'type': 'object'
+                        }
+                    }
+                }
+            },
+            'parameters': {
+                'TestParameter': {
+                    'name': 'TestParameter',
+                    'in': 'path',
+                    'required': True,
+                    'schema': {'type': 'string'},
+                },
+            },
+            'responses': {
+                'Error': error_response
+            },
             'securitySchemes': {}
         }
     }

@@ -99,5 +99,21 @@ class OpenAPIDoc:
         self.paths[url][method] = documentation
         return self
 
+    def add_schema(self, name: str, documentation: dict):
+        """ Add schema
+        https://swagger.io/docs/specification/components/
+        """
+
+        self.schemas[name] = documentation
+        return self
+
+    def add_response(self, name: str, documentation: dict):
+        """ Add response
+        https://swagger.io/docs/specification/components/
+        """
+
+        self.responses[name] = documentation
+        return self
+
     def to_dict(self, *args, **kwargs):
         return self.doc
