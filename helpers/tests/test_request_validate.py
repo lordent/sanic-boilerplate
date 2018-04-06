@@ -3,9 +3,8 @@ import json
 
 import pytest
 from marshmallow import Schema, fields
-from sanic import response
+from sanic import Sanic, response, views
 
-from app import app
 from errors.request import (
     BadRequestQueryData,
     BadRequestBodyData,
@@ -15,6 +14,7 @@ from helpers.request import validate
 
 @pytest.yield_fixture
 def fix_app():
+    app = Sanic(__name__, strict_slashes=True)
 
     class DataSchema(Schema):
         email = fields.Email(required=True)
@@ -32,6 +32,21 @@ def fix_app():
             }
         )
 
+    class View(views.HTTPMethodView):
+        @validate.query(DataSchema())
+        @validate.body(DataSchema())
+        async def get(self, request, parameter):
+            return response.json(
+                status=200,
+                body={
+                    'parameter': parameter,
+                    'query': DataSchema().dump(request['query']).data,
+                    'data': DataSchema().dump(request['data']).data,
+                }
+            )
+
+    app.add_route(View.as_view(), '/test-view-query-body-validate/<parameter>')
+
     yield app
 
 
@@ -40,13 +55,13 @@ def fix_test_client(loop, fix_app, test_client):
     return loop.run_until_complete(test_client(fix_app))
 
 
-async def test_validate(fix_test_client):
+async def fix_assets(fix_test_client, url, parameter=None):
     dt = datetime.datetime.utcnow().replace(
         tzinfo=datetime.timezone.utc,
         microsecond=0
     )
 
-    response = await fix_test_client.get('/test-query-body-validate')
+    response = await fix_test_client.get(url)
     assert response.status == 400
     assert await response.json() == {
         'type': BadRequestQueryData.type,
@@ -60,8 +75,7 @@ async def test_validate(fix_test_client):
         'email': 'test@test.com',
         'datetime': 'bad string',
     }
-    response = await fix_test_client.get(
-        '/test-query-body-validate', params=data)
+    response = await fix_test_client.get(url, params=data)
     assert response.status == 400
     assert await response.json() == {
         'type': BadRequestQueryData.type,
@@ -76,7 +90,7 @@ async def test_validate(fix_test_client):
         'datetime': dt.isoformat(),
     }
     response = await fix_test_client.get(
-        '/test-query-body-validate',
+        url,
         params=data, data=json.dumps({'datetime': 'bad string'}))
     assert response.status == 400
     assert await response.json() == {
@@ -93,9 +107,23 @@ async def test_validate(fix_test_client):
         'datetime': dt.isoformat(),
     }
     response = await fix_test_client.get(
-        '/test-query-body-validate', params=data, data=json.dumps(data))
+        url, params=data, data=json.dumps(data))
     assert response.status == 200
     assert await response.json() == {
         'query': data,
         'data': data,
+        **({'parameter': parameter} if parameter else {})
     }
+
+
+async def test_handler_validate(fix_test_client):
+    await fix_assets(fix_test_client, '/test-query-body-validate')
+
+
+async def test_view_handler_validate(fix_test_client):
+    parameter = 'test parameter value'
+    await fix_assets(
+        fix_test_client,
+        '/test-view-query-body-validate/%s' % parameter,
+        parameter,
+    )
