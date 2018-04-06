@@ -23,9 +23,11 @@ async def test_doc():
         'version': '1.0'
     }
 
-    """
-    @openapi.request({
+    @openapi.doc({
         'summary': 'Test summary text',
+        'description': 'Test description',
+    })
+    @openapi.request({
         'description': 'Test description',
     }, content_documentation={
         'example': {
@@ -41,12 +43,6 @@ async def test_doc():
             },
         },
     })
-    """
-
-    @openapi.doc({
-        'summary': 'Test summary text',
-        'description': 'Test description',
-    })
     @openapi.response()
     async def test_handler():
         return 'Ok!'
@@ -58,23 +54,25 @@ async def test_doc():
         OpenAPIDoc({
             'info': info,
         })
-        .add_path('/test', 'get', test_handler.__openapi__.documentation)
+        .add_path('/test', 'post', test_handler.__openapi__.documentation)
         .to_dict()
     )
 
-    """
     assert doc == {
         'openapi': '3.0.0',
         'info': info,
         'tags': [],
         'paths': {
-            '/test/': {
-                'get': {
+            '/test': {
+                'post': {
                     'responses': {
                         '200': {
+                            'description': '',
                             'content': {
-                                'application/json': {
-                                    'schema': {'type': 'string'}
+                                'text/plain': {
+                                    'schema': {
+                                        'type': 'string'
+                                    }
                                 }
                             }
                         }
@@ -92,10 +90,11 @@ async def test_doc():
                                         }
                                     }
                                 },
-                                'example': {'id': '4'}
+                                'example': {
+                                    'id': '4'
+                                }
                             }
                         },
-                        'summary': 'Test summary text',
                         'description': 'Test description'
                     },
                     'summary': 'Test summary text',
@@ -110,6 +109,5 @@ async def test_doc():
             'securitySchemes': {}
         }
     }
-    """
 
     validate_spec(doc)

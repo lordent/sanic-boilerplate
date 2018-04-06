@@ -62,7 +62,7 @@ def response(
     documentation: dict = None,
     content_documentation: dict = None,
     status=200,
-    content_type='application/json',
+    content_type='text/plain',
     schema=None
 ):
     def inner(func):
@@ -76,6 +76,7 @@ def response(
         return doc({
             'responses': {
                 str(status): dict_merge({
+                    'description': '',
                     'content': {
                         content_type: dict_merge({
                             'schema': schema_
