@@ -85,6 +85,10 @@ async def test_doc():
             test_handler.__openapi__.documentation)
         .add_schema('Error', error_schema)
         .add_response('Error', error_response)
+        .add_security('ApiKey', 'apiKey', {
+            'in': 'header',
+            'name': 'X-API-Key',
+        })
         .to_dict()
     )
 
@@ -177,7 +181,13 @@ async def test_doc():
             'responses': {
                 'Error': error_response
             },
-            'securitySchemes': {}
+            'securitySchemes': {
+                'ApiKey': {
+                    'type': 'apiKey',
+                    'in': 'header',
+                    'name': 'X-API-Key',
+                },
+            }
         }
     }
 
