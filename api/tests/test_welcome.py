@@ -1,5 +1,5 @@
 import json
-from tests.test_sanic import fix_app, fix_test_client
+from tests.test_app import fix_app, fix_test_client
 
 
 async def test_welcome(fix_test_client):

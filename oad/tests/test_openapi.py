@@ -69,10 +69,13 @@ async def test_doc():
     @openapi.response()
     @openapi.response(
         status=400, schema={'$ref': '#/components/schemas/Error'})
-    async def test_handler():
-        return 'Ok!'
+    async def test_handler(*args, **kwargs):
+        return 'Ok!', args, kwargs
 
-    assert await test_handler() == 'Ok!'
+    args = ('test', 'foo', 'bar')
+    kwargs = {'foo': 'bar'}
+
+    assert await test_handler(*args, **kwargs) == ('Ok!', args, kwargs)
 
     doc = (
         OpenAPIDoc({
