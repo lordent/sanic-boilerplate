@@ -1,7 +1,7 @@
 import re
 
 from oad.merge import dict_merge
-from oad.api.base import OpenAPIDoc
+from oad import openapi, OpenAPIDoc
 
 
 class SanicOpenAPIDoc(OpenAPIDoc):

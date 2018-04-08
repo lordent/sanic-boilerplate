@@ -1,5 +1,5 @@
 from sanic import response
-from oad import api, openapi
+from helpers.openapi import SanicOpenAPIDoc, openapi
 
 from app import app
 
@@ -13,7 +13,7 @@ from app import app
 async def handler_openapi(request):
     url_prefix = '/api/v1'
     return response.json(
-        api.OpenAPIDoc()
+        SanicOpenAPIDoc()
         .add_server(
             '%s://%s%s' % (
                 request.scheme,

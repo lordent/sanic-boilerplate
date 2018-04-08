@@ -1,4 +1,5 @@
 git+https://github.com/channelcat/sanic
+git+https://github.com/lordent/oad
 marshmallow
 raven
 raven_aiohttp
