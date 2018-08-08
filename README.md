@@ -11,7 +11,11 @@ It embeds :
 To use this Boilerplate just clone the repo as follows :
 
 ```
-git clone https://github.com/lordent/sanic-boilerplate.git
+$ git clone https://github.com/lordent/sanic-boilerplate.git projectname
+$ cd projectname
+$ python3 -m venv .env
+$ source .env/bin/activate
+$ pip install -r requirements.txt
 ```
 
 Once fetched, copy/paste the files to your local project repository and add your code (routes, ...). See the section [How to add routes](#how-to-add-routes)
